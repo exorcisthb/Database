@@ -1,4 +1,4 @@
-﻿-- Table Admins
+-- Table Admins
 CREATE TABLE Admins (
     AdminID INT PRIMARY KEY IDENTITY(1,1),
     Username NVARCHAR(100) NOT NULL UNIQUE,
@@ -48,15 +48,14 @@ CREATE TABLE [Services] (
 CREATE TABLE Rooms (
     RoomID INT PRIMARY KEY IDENTITY(1,1),
     RoomName NVARCHAR(50) NOT NULL UNIQUE,
+	UserID INT NULL,
+	[Role] NVARCHAR(20) NULL CHECK ([Role] IN ('Doctor', 'Nurse', 'Receptionist')),
     [Description] TEXT,
-    DoctorID INT NULL, -- Bác sĩ chính của phòng (có thể thay đổi)
-    NurseID INT NULL, -- Y tá chính của phòng (có thể thay đổi)
     [Status] NVARCHAR(20) DEFAULT 'Available' CHECK ([Status] IN ('Available', 'Not Available', 'In Progress', 'Completed')),
     CreatedBy INT,
     CreatedAt DATETIME DEFAULT GETDATE(),
     UpdatedAt DATETIME DEFAULT GETDATE(),
-    FOREIGN KEY (DoctorID) REFERENCES Users(UserID),
-    FOREIGN KEY (NurseID) REFERENCES Users(UserID),
+    FOREIGN KEY (UserID) REFERENCES Users(UserID),
     FOREIGN KEY (CreatedBy) REFERENCES Admins(AdminID)
 );
 
@@ -167,6 +166,7 @@ CREATE TABLE Invoices (
     PatientID INT NOT NULL,
     DoctorID INT NOT NULL,
     TotalAmount DECIMAL(10, 2) NOT NULL,
+	ServiceID int,
     [Status] NVARCHAR(20) DEFAULT 'Pending' CHECK ([Status] IN ('Pending', 'Paid', 'Partially Paid', 'Overdue', 'Cancelled', 'Refunded')),
     CreatedBy INT,
     CreatedAt DATETIME DEFAULT GETDATE(),
@@ -175,7 +175,9 @@ CREATE TABLE Invoices (
     FOREIGN KEY (PatientID) REFERENCES Users(UserID),
     FOREIGN KEY (DoctorID) REFERENCES Users(UserID),
     FOREIGN KEY (CreatedBy) REFERENCES Users(UserID),
+	FOREIGN KEY (ServiceID) REFERENCES [Services](ServiceID)
 );
+
 
 -- Table RoomServices (Dịch vụ có sẵn trong phòng)
 CREATE TABLE RoomServices (
@@ -203,3 +205,22 @@ CREATE TABLE Notifications (
     IsRead BIT DEFAULT 0,
     CreatedAt DATETIME DEFAULT GETDATE()
 );
+CREATE TABLE dbo.ReviewReplies (
+    ReplyID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    ReviewID int NOT NULL,
+    UserID int NOT NULL,
+    ReplyContent nvarchar(500) NOT NULL,
+    CreatedAt datetime NULL
+);
+
+CREATE TABLE dbo.Reviews (
+    ReviewID int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    UserID int NOT NULL,
+    DoctorID int NOT NULL,
+    ServiceID int NULL,
+    ServiceRating int NOT NULL,
+    DoctorRating int NOT NULL,
+    Comment nvarchar(500) NULL,
+    CreatedAt datetime NULL
+);
+
